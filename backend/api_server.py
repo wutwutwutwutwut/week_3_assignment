@@ -33,7 +33,7 @@ try:
 except ImportError:
     pass
 
-from test_backend_integration import RAGGenerator, GenerationConfig, SYSTEM_PROMPT
+from rag_generate import RAGGenerator, GenerationConfig, SYSTEM_PROMPT
 
 
 # Global instances
@@ -251,7 +251,7 @@ IMPORTANT: You have been provided with {len(results)} paper excerpts. Make sure 
         }
         
         payload = {
-            "model": f"openai/{rag_generator.config.llm_model}",
+            "model": rag_generator.config.llm_model,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_message}
@@ -260,14 +260,14 @@ IMPORTANT: You have been provided with {len(results)} paper excerpts. Make sure 
             "max_tokens": rag_generator.config.max_tokens,
             "stream": True
         }
-        
+
         response = requests.post(
             f"{rag_generator.openrouter_base_url}/chat/completions",
             headers=headers,
             json=payload,
             stream=True
         )
-        
+
         answer_chunks = []
         for line in response.iter_lines():
             if line:
@@ -291,11 +291,11 @@ IMPORTANT: You have been provided with {len(results)} paper excerpts. Make sure 
         processing_time = time.time() - start_time
         yield emit("complete", {
             "answer": answer,
-            "sources": list(sources_metadata.values()),
+            "sources": sources_metadata,
             "refined_query": refined if refined != query else None,
             "processing_time": processing_time
         })
-    
+
     except Exception as e:
         yield emit("error", {"message": str(e)})
 
@@ -445,7 +445,7 @@ IMPORTANT: You have been provided with {len(results)} paper excerpts. Make sure 
         }
         
         payload = {
-            "model": f"openai/{rag_generator.config.llm_model}",
+            "model": rag_generator.config.llm_model,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_message}
@@ -454,14 +454,14 @@ IMPORTANT: You have been provided with {len(results)} paper excerpts. Make sure 
             "max_tokens": rag_generator.config.max_tokens,
             "stream": True
         }
-        
+
         response = requests.post(
             f"{rag_generator.openrouter_base_url}/chat/completions",
             headers=headers,
             json=payload,
             stream=True
         )
-        
+
         answer_chunks = []
         for line in response.iter_lines():
             if line:
@@ -489,11 +489,11 @@ IMPORTANT: You have been provided with {len(results)} paper excerpts. Make sure 
         await websocket.send_json({
             "type": "complete",
             "answer": answer,
-            "sources": list(sources_metadata.values()),
+            "sources": sources_metadata,
             "refined_query": refined if refined != query else None,
             "processing_time": processing_time
         })
-        
+
     except WebSocketDisconnect:
         print("WebSocket disconnected")
     except Exception as e:
